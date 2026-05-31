@@ -10,7 +10,7 @@ struct PlayerSetupView: View {
     @FocusState private var focusedField: UUID?
 
     var body: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: 18) {
             header
 
             ScrollView {
@@ -29,13 +29,17 @@ struct PlayerSetupView: View {
                             }
                         } label: {
                             Label("Spieler hinzufügen", systemImage: "plus.circle.fill")
-                                .font(.headline)
-                                .foregroundStyle(.white)
+                                .font(.system(.headline, design: .rounded).weight(.bold))
+                                .foregroundStyle(Theme.charcoal)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 14)
                                 .background(
-                                    RoundedRectangle(cornerRadius: 14)
-                                        .stroke(Color.white.opacity(0.4), style: StrokeStyle(lineWidth: 1.5, dash: [6]))
+                                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                        .stroke(Theme.charcoal.opacity(0.4), style: StrokeStyle(lineWidth: 2, dash: [6]))
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                                .fill(.white.opacity(0.55))
+                                        )
                                 )
                         }
                     }
@@ -45,74 +49,73 @@ struct PlayerSetupView: View {
 
             startButton
                 .padding(.horizontal, 20)
-                .padding(.bottom, 16)
+                .padding(.bottom, 90)
         }
     }
 
     private var header: some View {
-        VStack(spacing: 8) {
-            Text("8 und Aus!")
-                .font(.system(size: 44, weight: .black, design: .rounded))
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [.yellow, .orange, .pink],
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    )
-                )
-                .shadow(color: .black.opacity(0.4), radius: 6, y: 3)
+        VStack(spacing: 10) {
+            HStack(alignment: .center, spacing: 10) {
+                ClayLabel(text: "8", size: 96, rotation: -4)
+                VStack(alignment: .leading, spacing: 2) {
+                    ClayLabel(text: "und", size: 28, rotation: -1)
+                    ClayLabel(text: "AUS!", size: 56, fillColor: Theme.sunny, rotation: 2)
+                }
+            }
+            .padding(.top, 28)
 
-            Text("Wer spielt mit?")
-                .font(.title3.weight(.medium))
-                .foregroundStyle(.white.opacity(0.85))
+            SpeechBubble {
+                Text("Wer spielt mit?")
+                    .font(.system(.title3, design: .rounded).weight(.heavy))
+                    .foregroundStyle(.white)
+            }
         }
-        .padding(.top, 32)
     }
 
     private func playerRow(index: Int, playerID: UUID) -> some View {
-        HStack(spacing: 12) {
-            ZStack {
-                Circle()
-                    .fill(playerColor(for: index))
-                    .frame(width: 40, height: 40)
-                Text("\(index + 1)")
-                    .font(.headline.bold())
-                    .foregroundStyle(.white)
-            }
+        ClayCard {
+            HStack(spacing: 14) {
+                ZStack {
+                    Circle()
+                        .fill(playerColor(for: index))
+                        .frame(width: 44, height: 44)
+                        .overlay(Circle().stroke(.white, lineWidth: 2))
+                        .shadow(color: .black.opacity(0.12), radius: 2, y: 2)
+                    Image(systemName: playerSymbol(for: index))
+                        .font(.headline.bold())
+                        .foregroundStyle(.white)
+                }
 
-            TextField(
-                "",
-                text: Binding(
-                    get: { game.players[index].name },
-                    set: { game.players[index].name = $0 }
-                ),
-                prompt: Text("Spieler \(index + 1)").foregroundStyle(.white.opacity(0.5))
-            )
-            .font(.title3.weight(.medium))
-            .foregroundStyle(.white)
-            .textInputAutocapitalization(.words)
-            .autocorrectionDisabled()
-            .submitLabel(.next)
-            .focused($focusedField, equals: playerID)
+                TextField(
+                    "",
+                    text: Binding(
+                        get: { game.players[index].name },
+                        set: { game.players[index].name = $0 }
+                    ),
+                    prompt: Text("Spieler \(index + 1)").foregroundStyle(Theme.charcoal.opacity(0.4))
+                )
+                .font(.system(.title3, design: .rounded).weight(.semibold))
+                .foregroundStyle(Theme.charcoal)
+                .textInputAutocapitalization(.words)
+                .autocorrectionDisabled()
+                .submitLabel(.next)
+                .focused($focusedField, equals: playerID)
 
-            if game.canRemovePlayer {
-                Button {
-                    withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-                        game.removePlayer(at: index)
+                if game.canRemovePlayer {
+                    Button {
+                        withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                            game.removePlayer(at: index)
+                        }
+                    } label: {
+                        Image(systemName: "minus.circle.fill")
+                            .font(.title2)
+                            .foregroundStyle(Theme.claret.opacity(0.85))
                     }
-                } label: {
-                    Image(systemName: "minus.circle.fill")
-                        .font(.title2)
-                        .foregroundStyle(.white.opacity(0.6))
                 }
             }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-        .background(
-            RoundedRectangle(cornerRadius: 14)
-                .fill(.white.opacity(0.12))
-        )
     }
 
     private var startButton: some View {
@@ -121,49 +124,46 @@ struct PlayerSetupView: View {
                 game.startGame()
             }
         } label: {
-            HStack {
-                Image(systemName: "play.fill")
-                Text("Spiel starten")
-            }
-            .font(.title3.weight(.bold))
-            .foregroundStyle(.black)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 16)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(
-                        LinearGradient(
-                            colors: [.yellow, .orange],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-            )
-            .opacity(game.canStartGame ? 1.0 : 0.4)
+            Label("Spiel starten", systemImage: "play.fill")
         }
+        .buttonStyle(ChunkyButtonStyle(disabled: !game.canStartGame))
         .disabled(!game.canStartGame)
     }
 
     private func playerColor(for index: Int) -> Color {
-        let palette: [Color] = [
-            .pink, .orange, .yellow, .green, .cyan, .purple
-        ]
-        return palette[index % palette.count]
+        Theme.playerPalette[index % Theme.playerPalette.count]
+    }
+
+    private func playerSymbol(for index: Int) -> String {
+        Theme.playerSymbols[index % Theme.playerSymbols.count]
+    }
+}
+
+struct SpeechBubble<Content: View>: View {
+    @ViewBuilder var content: () -> Content
+
+    var body: some View {
+        content()
+            .padding(.horizontal, 22)
+            .padding(.vertical, 12)
+            .background(
+                BlobShape()
+                    .fill(Theme.grass)
+                    .shadow(color: .black.opacity(0.15), radius: 4, y: 3)
+            )
+    }
+}
+
+struct BlobShape: Shape {
+    func path(in rect: CGRect) -> Path {
+        let r = min(rect.width, rect.height) * 0.45
+        return Path(roundedRect: rect, cornerRadius: r, style: .continuous)
     }
 }
 
 #Preview {
     ZStack {
-        LinearGradient(
-            colors: [
-                Color(red: 0.10, green: 0.12, blue: 0.30),
-                Color(red: 0.25, green: 0.10, blue: 0.45)
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-        .ignoresSafeArea()
+        SkyBackground()
         PlayerSetupView(game: GameViewModel())
     }
-    .preferredColorScheme(.dark)
 }

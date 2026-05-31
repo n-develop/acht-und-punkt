@@ -18,7 +18,7 @@ struct WinnerView: View {
                 .animation(.easeIn(duration: 0.5), value: showStandings)
 
             ScrollView {
-                VStack(spacing: 28) {
+                VStack(spacing: 24) {
                     trophySection
                     standingsSection
                         .opacity(showStandings ? 1 : 0)
@@ -29,30 +29,15 @@ struct WinnerView: View {
                             game.reset()
                         }
                     } label: {
-                        HStack {
-                            Image(systemName: "arrow.counterclockwise")
-                            Text("Neues Spiel")
-                        }
-                        .font(.title3.weight(.bold))
-                        .foregroundStyle(.black)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(
-                            RoundedRectangle(cornerRadius: 16)
-                                .fill(
-                                    LinearGradient(
-                                        colors: [.yellow, .orange],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
-                        )
+                        Label("Neues Spiel", systemImage: "arrow.counterclockwise")
                     }
-                    .opacity(showStandings ? 1 : 0)
+                    .buttonStyle(ChunkyButtonStyle(fill: Theme.coral))
                     .padding(.horizontal, 20)
-                    .padding(.top, 8)
+                    .padding(.top, 4)
+                    .opacity(showStandings ? 1 : 0)
                 }
-                .padding(.vertical, 40)
+                .padding(.top, 28)
+                .padding(.bottom, 100)
             }
         }
         .onAppear {
@@ -67,87 +52,101 @@ struct WinnerView: View {
     }
 
     private var trophySection: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 14) {
             ZStack {
                 Circle()
                     .fill(
                         RadialGradient(
-                            colors: [.yellow.opacity(0.5), .clear],
+                            colors: [Theme.sunny.opacity(0.55), .clear],
                             center: .center,
                             startRadius: 10,
-                            endRadius: 140
+                            endRadius: 160
                         )
                     )
-                    .frame(width: 280, height: 280)
-                    .blur(radius: 8)
+                    .frame(width: 300, height: 300)
+                    .blur(radius: 6)
+
+                ForEach(0..<8, id: \.self) { i in
+                    Capsule()
+                        .fill(Theme.sunny)
+                        .frame(width: 6, height: 26)
+                        .offset(y: -110)
+                        .rotationEffect(.degrees(Double(i) * 45 + (showStandings ? 0 : -30)))
+                        .opacity(showStandings ? 1 : 0)
+                }
 
                 Image(systemName: "trophy.fill")
-                    .font(.system(size: 140, weight: .bold))
+                    .font(.system(size: 130, weight: .bold))
                     .foregroundStyle(
                         LinearGradient(
-                            colors: [.yellow, .orange],
+                            colors: [Theme.sunny, Theme.coral],
                             startPoint: .top,
                             endPoint: .bottom
                         )
                     )
-                    .shadow(color: .orange.opacity(0.6), radius: 20)
+                    .shadow(color: Theme.coral.opacity(0.4), radius: 16)
                     .scaleEffect(trophyScale)
                     .rotationEffect(.degrees(trophyRotation))
             }
 
             if game.isTie {
-                Text("Unentschieden!")
-                    .font(.system(size: 36, weight: .black, design: .rounded))
+                ClayLabel(text: "Unentschieden!", size: 34, fillColor: .white)
+                Text("Es gibt mehrere Sieger:innen.")
+                    .font(.system(.headline, design: .rounded).weight(.semibold))
                     .foregroundStyle(.white)
-                Text("Es gibt mehrere Sieger.")
-                    .font(.headline)
-                    .foregroundStyle(.white.opacity(0.8))
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 6)
+                    .background(Capsule().fill(Theme.charcoal.opacity(0.25)))
             } else if let winner = game.winner {
-                Text("Sieger:in")
-                    .font(.headline.weight(.semibold))
-                    .foregroundStyle(.white.opacity(0.8))
-                    .textCase(.uppercase)
-                    .tracking(2)
+                SpeechBubble {
+                    Text("Sieger:in")
+                        .font(.system(.subheadline, design: .rounded).weight(.heavy))
+                        .foregroundStyle(.white)
+                        .textCase(.uppercase)
+                        .tracking(2)
+                }
 
-                Text(winner.name)
-                    .font(.system(size: 44, weight: .black, design: .rounded))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.yellow, .orange, .pink],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                    .multilineTextAlignment(.center)
+                ClayLabel(text: winner.name, size: 46, fillColor: .white, rotation: -2)
                     .padding(.horizontal, 20)
+                    .multilineTextAlignment(.center)
 
-                Text("\(winner.total) Punkte")
-                    .font(.title2.weight(.bold))
-                    .foregroundStyle(.white)
+                HStack(spacing: 6) {
+                    Image(systemName: "star.fill").foregroundStyle(Theme.sunny)
+                    Text("\(winner.total) Punkte")
+                        .font(.system(.title2, design: .rounded).weight(.heavy))
+                        .foregroundStyle(Theme.charcoal)
+                    Image(systemName: "star.fill").foregroundStyle(Theme.sunny)
+                }
+                .padding(.horizontal, 18)
+                .padding(.vertical, 8)
+                .background(
+                    Capsule().fill(.white)
+                        .shadow(color: .black.opacity(0.12), radius: 4, y: 2)
+                )
             }
         }
     }
 
     private var standingsSection: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 10) {
             Text("Endstand")
-                .font(.title2.weight(.bold))
+                .font(.system(.title2, design: .rounded).weight(.heavy))
                 .foregroundStyle(.white)
-                .padding(.bottom, 4)
+                .padding(.horizontal, 18)
+                .padding(.vertical, 6)
+                .background(Capsule().fill(Theme.charcoal.opacity(0.3)))
 
-            VStack(spacing: 0) {
-                tableHeader
-                ForEach(Array(game.sortedByTotal.enumerated()), id: \.element.id) { index, player in
-                    standingsRow(rank: index + 1, player: player)
-                    if index < game.sortedByTotal.count - 1 {
-                        Divider().background(.white.opacity(0.15))
+            ClayCard {
+                VStack(spacing: 0) {
+                    tableHeader
+                    ForEach(Array(game.sortedByTotal.enumerated()), id: \.element.id) { index, player in
+                        standingsRow(rank: index + 1, player: player)
+                        if index < game.sortedByTotal.count - 1 {
+                            Divider().background(Theme.charcoal.opacity(0.10))
+                        }
                     }
                 }
             }
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(.white.opacity(0.10))
-            )
             .padding(.horizontal, 20)
         }
     }
@@ -156,7 +155,7 @@ struct WinnerView: View {
         HStack(spacing: 8) {
             Text("#")
                 .frame(width: 28, alignment: .leading)
-            Text("Spieler")
+            Text("Spieler:in")
                 .frame(maxWidth: .infinity, alignment: .leading)
             ForEach(0..<GameViewModel.totalRounds, id: \.self) { round in
                 Text("R\(round + 1)")
@@ -164,13 +163,12 @@ struct WinnerView: View {
             }
             Text("Σ")
                 .frame(width: 40, alignment: .trailing)
-                .bold()
         }
-        .font(.caption.weight(.semibold))
-        .foregroundStyle(.white.opacity(0.7))
+        .font(.system(.caption, design: .rounded).weight(.heavy))
+        .foregroundStyle(.white)
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
-        .background(.white.opacity(0.08))
+        .background(Theme.grass)
     }
 
     private func standingsRow(rank: Int, player: Player) -> some View {
@@ -178,29 +176,30 @@ struct WinnerView: View {
             ZStack {
                 Circle()
                     .fill(rankColor(rank))
-                    .frame(width: 24, height: 24)
+                    .frame(width: 26, height: 26)
+                    .overlay(Circle().stroke(.white, lineWidth: 1.5))
                 Text("\(rank)")
-                    .font(.caption.bold())
-                    .foregroundStyle(.black)
+                    .font(.system(.caption, design: .rounded).weight(.heavy))
+                    .foregroundStyle(Theme.charcoal)
             }
             .frame(width: 28, alignment: .leading)
 
             Text(player.name)
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.white)
+                .font(.system(.subheadline, design: .rounded).weight(.bold))
+                .foregroundStyle(Theme.charcoal)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .lineLimit(1)
 
             ForEach(0..<GameViewModel.totalRounds, id: \.self) { round in
                 Text(player.roundScores[round].map(String.init) ?? "–")
-                    .font(.caption.monospacedDigit())
-                    .foregroundStyle(.white.opacity(0.85))
+                    .font(.system(.caption, design: .rounded).monospacedDigit().weight(.semibold))
+                    .foregroundStyle(Theme.charcoal.opacity(0.75))
                     .frame(width: 28)
             }
 
             Text("\(player.total)")
-                .font(.subheadline.weight(.bold).monospacedDigit())
-                .foregroundStyle(.white)
+                .font(.system(.subheadline, design: .rounded).weight(.black).monospacedDigit())
+                .foregroundStyle(Theme.charcoal)
                 .frame(width: 40, alignment: .trailing)
         }
         .padding(.horizontal, 14)
@@ -209,10 +208,10 @@ struct WinnerView: View {
 
     private func rankColor(_ rank: Int) -> Color {
         switch rank {
-        case 1: return .yellow
-        case 2: return Color(white: 0.8)
-        case 3: return .orange
-        default: return .white.opacity(0.5)
+        case 1: return Theme.sunny
+        case 2: return Color(white: 0.82)
+        case 3: return Theme.coral
+        default: return Theme.cream
         }
     }
 }
@@ -233,16 +232,7 @@ struct WinnerView: View {
     game.phase = .finished
 
     return ZStack {
-        LinearGradient(
-            colors: [
-                Color(red: 0.10, green: 0.12, blue: 0.30),
-                Color(red: 0.25, green: 0.10, blue: 0.45)
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-        .ignoresSafeArea()
+        SkyBackground()
         WinnerView(game: game)
     }
-    .preferredColorScheme(.dark)
 }

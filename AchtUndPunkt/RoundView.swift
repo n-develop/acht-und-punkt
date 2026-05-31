@@ -26,7 +26,7 @@ struct RoundView: View {
     }
 
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 16) {
             header
 
             ScrollView {
@@ -36,11 +36,12 @@ struct RoundView: View {
                     }
                 }
                 .padding(.horizontal, 20)
+                .padding(.bottom, 8)
             }
 
             actionButton
                 .padding(.horizontal, 20)
-                .padding(.bottom, 16)
+                .padding(.bottom, 90)
         }
         .onAppear {
             for player in game.players where scoreInputs[player.id] == nil {
@@ -57,80 +58,82 @@ struct RoundView: View {
     }
 
     private var header: some View {
-        VStack(spacing: 6) {
-            Text("Runde \(round + 1) von \(GameViewModel.totalRounds)")
-                .font(.system(size: 32, weight: .black, design: .rounded))
-                .foregroundStyle(.white)
+        VStack(spacing: 12) {
+            SpeechBubble {
+                Text("Runde \(round + 1) von \(GameViewModel.totalRounds)")
+                    .font(.system(.title2, design: .rounded).weight(.heavy))
+                    .foregroundStyle(.white)
+            }
 
-            ProgressView(value: Double(round + 1), total: Double(GameViewModel.totalRounds))
-                .progressViewStyle(.linear)
-                .tint(
-                    LinearGradient(
-                        colors: [.yellow, .orange, .pink],
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    )
-                )
-                .frame(maxWidth: 240)
+            HStack(spacing: 8) {
+                ForEach(0..<GameViewModel.totalRounds, id: \.self) { i in
+                    Circle()
+                        .fill(i <= round ? Theme.sunny : .white.opacity(0.6))
+                        .frame(width: 14, height: 14)
+                        .overlay(
+                            Circle().stroke(Theme.charcoal.opacity(0.25), lineWidth: 1)
+                        )
+                }
+            }
 
             Text("Punkte für diese Runde eintragen")
-                .font(.subheadline)
-                .foregroundStyle(.white.opacity(0.75))
-                .padding(.top, 4)
+                .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                .foregroundStyle(Theme.charcoal.opacity(0.85))
+                .padding(.horizontal, 14)
+                .padding(.vertical, 6)
+                .background(
+                    Capsule().fill(.white.opacity(0.85))
+                )
         }
-        .padding(.top, 32)
+        .padding(.top, 28)
     }
 
     private func scoreRow(index: Int, player: Player) -> some View {
-        HStack(spacing: 14) {
-            ZStack {
-                Circle()
-                    .fill(playerColor(for: index))
-                    .frame(width: 44, height: 44)
-                Text(initials(for: player.name))
-                    .font(.headline.bold())
-                    .foregroundStyle(.white)
-            }
+        ClayCard {
+            HStack(spacing: 14) {
+                ZStack {
+                    Circle()
+                        .fill(playerColor(for: index))
+                        .frame(width: 48, height: 48)
+                        .overlay(Circle().stroke(.white, lineWidth: 2))
+                        .shadow(color: .black.opacity(0.12), radius: 2, y: 2)
+                    Image(systemName: playerSymbol(for: index))
+                        .font(.headline.bold())
+                        .foregroundStyle(.white)
+                }
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text(player.name)
-                    .font(.headline)
-                    .foregroundStyle(.white)
-                Text("Gesamt: \(player.total)")
-                    .font(.caption)
-                    .foregroundStyle(.white.opacity(0.7))
-            }
-
-            Spacer()
-
-            TextField(
-                "",
-                text: Binding(
-                    get: { scoreInputs[player.id] ?? "" },
-                    set: { newValue in
-                        let filtered = newValue.filter { $0.isNumber || $0 == "-" }
-                        scoreInputs[player.id] = filtered
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(player.name)
+                        .font(.system(.headline, design: .rounded).weight(.heavy))
+                        .foregroundStyle(Theme.charcoal)
+                        .lineLimit(1)
+                    HStack(spacing: 6) {
+                        Image(systemName: "star.fill")
+                            .font(.caption2)
+                            .foregroundStyle(Theme.sunny)
+                        Text("Gesamt: \(player.total)")
+                            .font(.system(.caption, design: .rounded).weight(.semibold))
+                            .foregroundStyle(Theme.charcoal.opacity(0.7))
                     }
-                ),
-                prompt: Text("0").foregroundStyle(.white.opacity(0.4))
-            )
-            .keyboardType(.numbersAndPunctuation)
-            .multilineTextAlignment(.center)
-            .font(.title2.weight(.bold))
-            .foregroundStyle(.white)
-            .frame(width: 80, height: 50)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(.white.opacity(0.15))
-            )
-            .focused($focusedPlayer, equals: player.id)
+                }
+
+                Spacer()
+
+                ScoreInputField(
+                    text: Binding(
+                        get: { scoreInputs[player.id] ?? "" },
+                        set: { newValue in
+                            let filtered = newValue.filter { $0.isNumber || $0 == "-" }
+                            scoreInputs[player.id] = filtered
+                        }
+                    ),
+                    focused: $focusedPlayer,
+                    id: player.id
+                )
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-        .background(
-            RoundedRectangle(cornerRadius: 14)
-                .fill(.white.opacity(0.10))
-        )
     }
 
     private var actionButton: some View {
@@ -140,26 +143,15 @@ struct RoundView: View {
                 game.advanceRound()
             }
         } label: {
-            HStack {
-                Image(systemName: isLastRound ? "flag.checkered" : "arrow.right.circle.fill")
-                Text(isLastRound ? "Endergebnis anzeigen" : "Nächste Runde")
-            }
-            .font(.title3.weight(.bold))
-            .foregroundStyle(.black)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 16)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(
-                        LinearGradient(
-                            colors: [.yellow, .orange],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
+            Label(
+                isLastRound ? "Endergebnis anzeigen" : "Nächste Runde",
+                systemImage: isLastRound ? "flag.checkered" : "arrow.right.circle.fill"
             )
-            .opacity(allScoresEntered ? 1.0 : 0.4)
         }
+        .buttonStyle(ChunkyButtonStyle(
+            fill: isLastRound ? Theme.coral : Theme.grass,
+            disabled: !allScoresEntered
+        ))
         .disabled(!allScoresEntered)
     }
 
@@ -173,19 +165,51 @@ struct RoundView: View {
     }
 
     private func playerColor(for index: Int) -> Color {
-        let palette: [Color] = [.pink, .orange, .yellow, .green, .cyan, .purple]
-        return palette[index % palette.count]
+        Theme.playerPalette[index % Theme.playerPalette.count]
     }
 
-    private func initials(for name: String) -> String {
-        let parts = name.split(separator: " ")
-        if let first = parts.first?.first {
-            if parts.count > 1, let second = parts.last?.first {
-                return "\(first)\(second)".uppercased()
-            }
-            return String(first).uppercased()
-        }
-        return "?"
+    private func playerSymbol(for index: Int) -> String {
+        Theme.playerSymbols[index % Theme.playerSymbols.count]
+    }
+}
+
+private struct ScoreInputField: View {
+    @Binding var text: String
+    var focused: FocusState<UUID?>.Binding
+    let id: UUID
+
+    private var displayValue: Int? {
+        Int(text.trimmingCharacters(in: .whitespaces))
+    }
+
+    private var chipColor: Color {
+        guard let v = displayValue else { return Theme.cream }
+        if v < 0 { return Theme.claret }
+        if v > 0 { return Theme.grass }
+        return Theme.charcoal.opacity(0.5)
+    }
+
+    var body: some View {
+        TextField(
+            "",
+            text: $text,
+            prompt: Text("0").foregroundStyle(.white.opacity(0.6))
+        )
+        .keyboardType(.numbersAndPunctuation)
+        .multilineTextAlignment(.center)
+        .font(.system(.title2, design: .rounded).weight(.black))
+        .foregroundStyle(displayValue == nil ? Theme.charcoal.opacity(0.45) : .white)
+        .frame(width: 78, height: 52)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(displayValue == nil ? Theme.cream : chipColor)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .stroke(Theme.charcoal.opacity(0.2), lineWidth: 1.5)
+                )
+                .shadow(color: .black.opacity(0.08), radius: 2, y: 2)
+        )
+        .focused(focused, equals: id)
     }
 }
 
@@ -202,16 +226,7 @@ struct RoundView: View {
     game.players[2].roundScores[0] = 15
 
     return ZStack {
-        LinearGradient(
-            colors: [
-                Color(red: 0.10, green: 0.12, blue: 0.30),
-                Color(red: 0.25, green: 0.10, blue: 0.45)
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-        .ignoresSafeArea()
+        SkyBackground()
         RoundView(game: game, round: 1)
     }
-    .preferredColorScheme(.dark)
 }

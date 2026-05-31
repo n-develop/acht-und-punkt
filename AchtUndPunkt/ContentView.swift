@@ -10,15 +10,7 @@ struct ContentView: View {
 
     var body: some View {
         ZStack {
-            LinearGradient(
-                colors: [
-                    Color(red: 0.10, green: 0.12, blue: 0.30),
-                    Color(red: 0.25, green: 0.10, blue: 0.45)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
+            SkyBackground()
 
             Group {
                 switch game.phase {
@@ -39,7 +31,7 @@ struct ContentView: View {
             }
             .animation(.spring(response: 0.5, dampingFraction: 0.85), value: game.phase)
         }
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(.light)
     }
 }
 
