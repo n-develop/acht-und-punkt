@@ -6,7 +6,7 @@
 import SwiftUI
 
 struct RoundView: View {
-    @Bindable var game: GameViewModel
+    @ObservedObject var game: GameViewModel
     let round: Int
 
     @State private var scoreInputs: [UUID: String] = [:]
@@ -193,7 +193,7 @@ private struct ScoreInputField: View {
         TextField(
             "",
             text: $text,
-            prompt: Text("0").foregroundStyle(.white.opacity(0.6))
+            prompt: Text("0").foregroundColor(.white.opacity(0.6))
         )
         .keyboardType(.numbersAndPunctuation)
         .multilineTextAlignment(.center)

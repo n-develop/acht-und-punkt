@@ -6,7 +6,7 @@
 import SwiftUI
 
 struct WinnerView: View {
-    @Bindable var game: GameViewModel
+    @ObservedObject var game: GameViewModel
     @State private var trophyScale: CGFloat = 0.2
     @State private var trophyRotation: Double = -25
     @State private var showStandings = false

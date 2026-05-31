@@ -6,7 +6,7 @@
 import SwiftUI
 
 struct PlayerSetupView: View {
-    @Bindable var game: GameViewModel
+    @ObservedObject var game: GameViewModel
     @FocusState private var focusedField: UUID?
 
     var body: some View {
@@ -92,7 +92,7 @@ struct PlayerSetupView: View {
                         get: { game.players[index].name },
                         set: { game.players[index].name = $0 }
                     ),
-                    prompt: Text("Spieler \(index + 1)").foregroundStyle(Theme.charcoal.opacity(0.4))
+                    prompt: Text("Spieler \(index + 1)").foregroundColor(Theme.charcoal.opacity(0.4))
                 )
                 .font(.system(.title3, design: .rounded).weight(.semibold))
                 .foregroundStyle(Theme.charcoal)

@@ -4,7 +4,7 @@
 //
 
 import SwiftUI
-import Observation
+import Combine
 
 struct Player: Identifiable, Equatable {
     let id = UUID()
@@ -31,12 +31,11 @@ enum GamePhase: Equatable {
     case finished
 }
 
-@Observable
-final class GameViewModel {
+final class GameViewModel: ObservableObject {
     static let totalRounds = 5
 
-    var players: [Player]
-    var phase: GamePhase = .setup
+    @Published var players: [Player]
+    @Published var phase: GamePhase = .setup
 
     init() {
         self.players = [Player(name: ""), Player(name: "")]

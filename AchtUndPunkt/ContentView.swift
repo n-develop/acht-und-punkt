@@ -6,7 +6,7 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State private var game = GameViewModel()
+    @StateObject private var game = GameViewModel()
 
     var body: some View {
         ZStack {
