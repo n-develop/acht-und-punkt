@@ -10,6 +10,7 @@ struct RoundView: View {
     let round: Int
 
     @State private var scoreInputs: [UUID: String] = [:]
+    @State private var achtUndAusPlayer: UUID? = nil
     @FocusState private var focusedPlayer: UUID?
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
@@ -105,7 +106,8 @@ struct RoundView: View {
     }
 
     private func scoreRow(index: Int, player: Player) -> some View {
-        ClayCard {
+        let isWinner = achtUndAusPlayer == player.id
+        return ClayCard(fill: isWinner ? Theme.sunny.opacity(0.18) : .white) {
             HStack(spacing: 14) {
                 ZStack {
                     Circle()
@@ -135,10 +137,38 @@ struct RoundView: View {
 
                 Spacer()
 
+                // "8 und Aus!" marker button
+                Button {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.65)) {
+                        toggleAchtUndAus(for: player)
+                    }
+                } label: {
+                    Text(isWinner ? "8 und\nAus!" : "8!")
+                        .font(.system(.caption, design: .rounded).weight(.black))
+                        .multilineTextAlignment(.center)
+                        .foregroundStyle(isWinner ? Theme.charcoal : Theme.charcoal.opacity(0.45))
+                        .padding(.horizontal, isWinner ? 8 : 10)
+                        .padding(.vertical, 6)
+                        .frame(minWidth: 44)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .fill(isWinner ? Theme.sunny : Theme.cream)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                        .stroke(
+                                            isWinner ? Theme.coral : Theme.charcoal.opacity(0.2),
+                                            lineWidth: isWinner ? 2 : 1
+                                        )
+                                )
+                                .shadow(color: isWinner ? Theme.sunny.opacity(0.5) : .clear, radius: 6)
+                        )
+                }
+
                 ScoreInputField(
                     text: Binding(
                         get: { scoreInputs[player.id] ?? "" },
                         set: { newValue in
+                            if achtUndAusPlayer == player.id { achtUndAusPlayer = nil }
                             let filtered = newValue.filter { $0.isNumber || $0 == "-" }
                             scoreInputs[player.id] = filtered
                         }
@@ -149,6 +179,21 @@ struct RoundView: View {
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 12)
+        }
+    }
+
+    private func toggleAchtUndAus(for player: Player) {
+        let wasMarked = achtUndAusPlayer == player.id
+        // Clear the previous winner's prefilled score if untouched
+        if let prev = achtUndAusPlayer, scoreInputs[prev] == "16" {
+            scoreInputs[prev] = ""
+        }
+        if wasMarked {
+            achtUndAusPlayer = nil
+        } else {
+            achtUndAusPlayer = player.id
+            scoreInputs[player.id] = "16"
+            focusedPlayer = nil
         }
     }
 
