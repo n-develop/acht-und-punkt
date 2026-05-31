@@ -9,6 +9,7 @@ struct PlayerSetupView: View {
     @ObservedObject var game: GameViewModel
     @FocusState private var focusedField: UUID?
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @State private var showIconExport = false
 
     private var isIPad: Bool { horizontalSizeClass == .regular }
 
@@ -38,6 +39,8 @@ struct PlayerSetupView: View {
                 }
             }
             .padding(.top, isIPad ? 40 : 28)
+            .onLongPressGesture { showIconExport = true }
+            .sheet(isPresented: $showIconExport) { IconExportSheet() }
 
             SpeechBubble {
                 Text("Wer spielt mit?")
