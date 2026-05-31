@@ -59,7 +59,7 @@ struct PlayerSetupView: View {
                 ClayLabel(text: "8", size: 96, rotation: -4)
                 VStack(alignment: .leading, spacing: 2) {
                     ClayLabel(text: "und", size: 28, rotation: -1)
-                    ClayLabel(text: "AUS!", size: 56, fillColor: Theme.sunny, rotation: 2)
+                    ClayLabel(text: "Punkt!", size: 56, fillColor: Theme.sunny, rotation: 2)
                 }
             }
             .padding(.top, 28)
