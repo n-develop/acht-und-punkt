@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- App does not use data to track users -->
+	<key>NSPrivacyTracking</key>
+	<false/>
+
+	<!-- No domains used for tracking -->
+	<key>NSPrivacyTrackingDomains</key>
+	<array/>
+
+	<!-- App collects no user data -->
+	<key>NSPrivacyCollectedDataTypes</key>
+	<array/>
+
+	<!-- No required-reason APIs are called directly:
+	     - No UserDefaults
+	     - No file timestamp or disk-space APIs
+	     - No system boot time APIs
+	     - No active keyboard APIs
+	     FileManager.temporaryDirectory is used only in DEBUG builds
+	     to stage the icon PNG export (write-only, no sensitive data). -->
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array/>
+</dict>
+</plist>
