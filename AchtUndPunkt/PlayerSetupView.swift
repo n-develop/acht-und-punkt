@@ -9,7 +9,9 @@ struct PlayerSetupView: View {
     @ObservedObject var game: GameViewModel
     @FocusState private var focusedField: UUID?
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    #if DEBUG
     @State private var showIconExport = false
+    #endif
 
     private var isIPad: Bool { horizontalSizeClass == .regular }
 
@@ -27,6 +29,18 @@ struct PlayerSetupView: View {
                 .padding(.bottom, 90)
         }
         .frame(maxWidth: isIPad ? 700 : .infinity)
+        #if DEBUG
+        .overlay(alignment: .topTrailing) {
+            Button { showIconExport = true } label: {
+                Image(systemName: "app.fill")
+                    .font(.title2)
+                    .foregroundStyle(.white.opacity(0.65))
+                    .padding(.top, isIPad ? 44 : 16)
+                    .padding(.trailing, 16)
+            }
+        }
+        .sheet(isPresented: $showIconExport) { IconExportSheet() }
+        #endif
     }
 
     private var header: some View {
@@ -39,8 +53,6 @@ struct PlayerSetupView: View {
                 }
             }
             .padding(.top, isIPad ? 40 : 28)
-            .onLongPressGesture { showIconExport = true }
-            .sheet(isPresented: $showIconExport) { IconExportSheet() }
 
             SpeechBubble {
                 Text("Wer spielt mit?")
