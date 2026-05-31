@@ -8,67 +8,95 @@ import SwiftUI
 struct PlayerSetupView: View {
     @ObservedObject var game: GameViewModel
     @FocusState private var focusedField: UUID?
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
+    private var isIPad: Bool { horizontalSizeClass == .regular }
 
     var body: some View {
-        VStack(spacing: 18) {
+        VStack(spacing: isIPad ? 28 : 18) {
             header
 
             ScrollView {
-                VStack(spacing: 12) {
-                    ForEach(Array(game.players.enumerated()), id: \.element.id) { index, player in
-                        playerRow(index: index, playerID: player.id)
-                    }
-
-                    if game.canAddPlayer {
-                        Button {
-                            withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-                                game.addPlayer()
-                            }
-                            DispatchQueue.main.async {
-                                focusedField = game.players.last?.id
-                            }
-                        } label: {
-                            Label("Spieler hinzufügen", systemImage: "plus.circle.fill")
-                                .font(.system(.headline, design: .rounded).weight(.bold))
-                                .foregroundStyle(Theme.charcoal)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 14)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                        .stroke(Theme.charcoal.opacity(0.4), style: StrokeStyle(lineWidth: 2, dash: [6]))
-                                        .background(
-                                            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                                .fill(.white.opacity(0.55))
-                                        )
-                                )
-                        }
-                    }
-                }
-                .padding(.horizontal, 20)
+                playerGrid
+                    .padding(.horizontal, isIPad ? 40 : 20)
             }
 
             startButton
-                .padding(.horizontal, 20)
+                .padding(.horizontal, isIPad ? 40 : 20)
                 .padding(.bottom, 90)
         }
+        .frame(maxWidth: isIPad ? 700 : .infinity)
     }
 
     private var header: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 12) {
             HStack(alignment: .center, spacing: 10) {
-                ClayLabel(text: "8", size: 96, rotation: -4)
+                ClayLabel(text: "8", size: isIPad ? 120 : 96, rotation: -4)
                 VStack(alignment: .leading, spacing: 2) {
-                    ClayLabel(text: "und", size: 28, rotation: -1)
-                    ClayLabel(text: "Punkt!", size: 56, fillColor: Theme.sunny, rotation: 2)
+                    ClayLabel(text: "und", size: isIPad ? 36 : 28, rotation: -1)
+                    ClayLabel(text: "Punkt!", size: isIPad ? 72 : 56, fillColor: Theme.sunny, rotation: 2)
                 }
             }
-            .padding(.top, 28)
+            .padding(.top, isIPad ? 40 : 28)
 
             SpeechBubble {
                 Text("Wer spielt mit?")
-                    .font(.system(.title3, design: .rounded).weight(.heavy))
+                    .font(.system(isIPad ? .title : .title3, design: .rounded).weight(.heavy))
                     .foregroundStyle(.white)
             }
+        }
+    }
+
+    @ViewBuilder
+    private var playerGrid: some View {
+        if isIPad {
+            VStack(spacing: 12) {
+                LazyVGrid(
+                    columns: [GridItem(.flexible()), GridItem(.flexible())],
+                    spacing: 12
+                ) {
+                    ForEach(Array(game.players.enumerated()), id: \.element.id) { index, player in
+                        playerRow(index: index, playerID: player.id)
+                    }
+                }
+                if game.canAddPlayer {
+                    addPlayerButton
+                }
+            }
+        } else {
+            VStack(spacing: 12) {
+                ForEach(Array(game.players.enumerated()), id: \.element.id) { index, player in
+                    playerRow(index: index, playerID: player.id)
+                }
+                if game.canAddPlayer {
+                    addPlayerButton
+                }
+            }
+        }
+    }
+
+    private var addPlayerButton: some View {
+        Button {
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                game.addPlayer()
+            }
+            DispatchQueue.main.async {
+                focusedField = game.players.last?.id
+            }
+        } label: {
+            Label("Spieler hinzufügen", systemImage: "plus.circle.fill")
+                .font(.system(.headline, design: .rounded).weight(.bold))
+                .foregroundStyle(Theme.charcoal)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .stroke(Theme.charcoal.opacity(0.4), style: StrokeStyle(lineWidth: 2, dash: [6]))
+                        .background(
+                            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                .fill(.white.opacity(0.55))
+                        )
+                )
         }
     }
 

@@ -11,6 +11,9 @@ struct RoundView: View {
 
     @State private var scoreInputs: [UUID: String] = [:]
     @FocusState private var focusedPlayer: UUID?
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
+    private var isIPad: Bool { horizontalSizeClass == .regular }
 
     private var isLastRound: Bool {
         round == GameViewModel.totalRounds - 1
@@ -26,21 +29,18 @@ struct RoundView: View {
     }
 
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: isIPad ? 20 : 16) {
             header
 
             ScrollView {
-                VStack(spacing: 12) {
-                    ForEach(Array(game.players.enumerated()), id: \.element.id) { index, player in
-                        scoreRow(index: index, player: player)
-                    }
-                }
-                .padding(.horizontal, 20)
-                .padding(.bottom, 8)
+                playerList
+                    .padding(.horizontal, isIPad ? 32 : 20)
+                    .padding(.bottom, 8)
             }
 
             actionButton
-                .padding(.horizontal, 20)
+                .padding(.horizontal, isIPad ? 32 : 20)
+                .frame(maxWidth: isIPad ? 500 : .infinity)
                 .padding(.bottom, 90)
         }
         .onAppear {
@@ -61,31 +61,47 @@ struct RoundView: View {
         VStack(spacing: 12) {
             SpeechBubble {
                 Text("Runde \(round + 1) von \(GameViewModel.totalRounds)")
-                    .font(.system(.title2, design: .rounded).weight(.heavy))
+                    .font(.system(isIPad ? .title : .title2, design: .rounded).weight(.heavy))
                     .foregroundStyle(.white)
             }
 
-            HStack(spacing: 8) {
+            HStack(spacing: isIPad ? 12 : 8) {
                 ForEach(0..<GameViewModel.totalRounds, id: \.self) { i in
                     Circle()
                         .fill(i <= round ? Theme.sunny : .white.opacity(0.6))
-                        .frame(width: 14, height: 14)
-                        .overlay(
-                            Circle().stroke(Theme.charcoal.opacity(0.25), lineWidth: 1)
-                        )
+                        .frame(width: isIPad ? 18 : 14, height: isIPad ? 18 : 14)
+                        .overlay(Circle().stroke(Theme.charcoal.opacity(0.25), lineWidth: 1))
                 }
             }
 
             Text("Punkte für diese Runde eintragen")
-                .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                .font(.system(isIPad ? .body : .subheadline, design: .rounded).weight(.semibold))
                 .foregroundStyle(Theme.charcoal.opacity(0.85))
                 .padding(.horizontal, 14)
                 .padding(.vertical, 6)
-                .background(
-                    Capsule().fill(.white.opacity(0.85))
-                )
+                .background(Capsule().fill(.white.opacity(0.85)))
         }
-        .padding(.top, 28)
+        .padding(.top, isIPad ? 36 : 28)
+    }
+
+    @ViewBuilder
+    private var playerList: some View {
+        if isIPad {
+            LazyVGrid(
+                columns: [GridItem(.flexible()), GridItem(.flexible())],
+                spacing: 14
+            ) {
+                ForEach(Array(game.players.enumerated()), id: \.element.id) { index, player in
+                    scoreRow(index: index, player: player)
+                }
+            }
+        } else {
+            VStack(spacing: 12) {
+                ForEach(Array(game.players.enumerated()), id: \.element.id) { index, player in
+                    scoreRow(index: index, player: player)
+                }
+            }
+        }
     }
 
     private func scoreRow(index: Int, player: Player) -> some View {
@@ -107,7 +123,7 @@ struct RoundView: View {
                         .font(.system(.headline, design: .rounded).weight(.heavy))
                         .foregroundStyle(Theme.charcoal)
                         .lineLimit(1)
-                    HStack(spacing: 6) {
+                    HStack(spacing: 4) {
                         Image(systemName: "star.fill")
                             .font(.caption2)
                             .foregroundStyle(Theme.sunny)
@@ -139,9 +155,7 @@ struct RoundView: View {
     private var actionButton: some View {
         Button {
             commitScores()
-            withAnimation {
-                game.advanceRound()
-            }
+            withAnimation { game.advanceRound() }
         } label: {
             Label(
                 isLastRound ? "Endergebnis anzeigen" : "Nächste Runde",
@@ -216,14 +230,12 @@ private struct ScoreInputField: View {
 #Preview {
     let game = GameViewModel()
     game.players = [
-        Player(name: "Anna"),
-        Player(name: "Ben"),
-        Player(name: "Clara")
+        Player(name: "Anna"), Player(name: "Ben"),
+        Player(name: "Clara"), Player(name: "David")
     ]
     game.phase = .playing(round: 1)
     game.players[0].roundScores[0] = 12
     game.players[1].roundScores[0] = 8
-    game.players[2].roundScores[0] = 15
 
     return ZStack {
         SkyBackground()

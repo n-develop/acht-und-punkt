@@ -10,6 +10,9 @@ struct WinnerView: View {
     @State private var trophyScale: CGFloat = 0.2
     @State private var trophyRotation: Double = -25
     @State private var showStandings = false
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
+    private var isIPad: Bool { horizontalSizeClass == .regular }
 
     var body: some View {
         ZStack {
@@ -17,27 +20,10 @@ struct WinnerView: View {
                 .opacity(showStandings ? 1 : 0)
                 .animation(.easeIn(duration: 0.5), value: showStandings)
 
-            ScrollView {
-                VStack(spacing: 24) {
-                    trophySection
-                    standingsSection
-                        .opacity(showStandings ? 1 : 0)
-                        .offset(y: showStandings ? 0 : 30)
-
-                    Button {
-                        withAnimation {
-                            game.reset()
-                        }
-                    } label: {
-                        Label("Neues Spiel", systemImage: "arrow.counterclockwise")
-                    }
-                    .buttonStyle(ChunkyButtonStyle(fill: Theme.coral))
-                    .padding(.horizontal, 20)
-                    .padding(.top, 4)
-                    .opacity(showStandings ? 1 : 0)
-                }
-                .padding(.top, 28)
-                .padding(.bottom, 100)
+            if isIPad {
+                iPadLayout
+            } else {
+                iPhoneLayout
             }
         }
         .onAppear {
@@ -51,7 +37,65 @@ struct WinnerView: View {
         }
     }
 
-    private var trophySection: some View {
+    // MARK: - iPad: side-by-side
+
+    private var iPadLayout: some View {
+        HStack(alignment: .top, spacing: 0) {
+            // Left column: trophy + winner info + new game button (fixed 320pt)
+            VStack(spacing: 0) {
+                Spacer()
+                trophySection(trophySize: 140, showRays: true)
+                Spacer()
+                newGameButton
+                    .padding(.horizontal, 32)
+                    .padding(.bottom, 110)
+            }
+            .frame(width: 320)
+            .opacity(showStandings ? 1 : 0)
+            .offset(y: showStandings ? 0 : 20)
+
+            Divider()
+                .background(Theme.charcoal.opacity(0.12))
+                .padding(.vertical, 40)
+
+            // Right column: standings table (takes remaining width)
+            ScrollView {
+                standingsSection
+                    .padding(.horizontal, 24)
+                    .padding(.top, 40)
+                    .padding(.bottom, 120)
+            }
+            .frame(maxWidth: .infinity)
+            .opacity(showStandings ? 1 : 0)
+            .offset(y: showStandings ? 0 : 30)
+        }
+        .animation(.easeOut(duration: 0.5), value: showStandings)
+    }
+
+    // MARK: - iPhone: scrolling column
+
+    private var iPhoneLayout: some View {
+        ScrollView {
+            VStack(spacing: 24) {
+                trophySection(trophySize: 130, showRays: true)
+                standingsSection
+                    .opacity(showStandings ? 1 : 0)
+                    .offset(y: showStandings ? 0 : 30)
+
+                newGameButton
+                    .padding(.horizontal, 20)
+                    .padding(.top, 4)
+                    .opacity(showStandings ? 1 : 0)
+            }
+            .padding(.top, 28)
+            .padding(.bottom, 110)
+        }
+        .animation(.easeOut(duration: 0.5), value: showStandings)
+    }
+
+    // MARK: - Shared subviews
+
+    private func trophySection(trophySize: CGFloat, showRays: Bool) -> some View {
         VStack(spacing: 14) {
             ZStack {
                 Circle()
@@ -60,23 +104,25 @@ struct WinnerView: View {
                             colors: [Theme.sunny.opacity(0.55), .clear],
                             center: .center,
                             startRadius: 10,
-                            endRadius: 160
+                            endRadius: trophySize * 1.2
                         )
                     )
-                    .frame(width: 300, height: 300)
+                    .frame(width: trophySize * 2.3, height: trophySize * 2.3)
                     .blur(radius: 6)
 
-                ForEach(0..<8, id: \.self) { i in
-                    Capsule()
-                        .fill(Theme.sunny)
-                        .frame(width: 6, height: 26)
-                        .offset(y: -110)
-                        .rotationEffect(.degrees(Double(i) * 45 + (showStandings ? 0 : -30)))
-                        .opacity(showStandings ? 1 : 0)
+                if showRays {
+                    ForEach(0..<8, id: \.self) { i in
+                        Capsule()
+                            .fill(Theme.sunny)
+                            .frame(width: isIPad ? 8 : 6, height: isIPad ? 32 : 26)
+                            .offset(y: -(trophySize * 0.88))
+                            .rotationEffect(.degrees(Double(i) * 45 + (showStandings ? 0 : -30)))
+                            .opacity(showStandings ? 1 : 0)
+                    }
                 }
 
                 Image(systemName: "trophy.fill")
-                    .font(.system(size: 130, weight: .bold))
+                    .font(.system(size: trophySize, weight: .bold))
                     .foregroundStyle(
                         LinearGradient(
                             colors: [Theme.sunny, Theme.coral],
@@ -90,9 +136,9 @@ struct WinnerView: View {
             }
 
             if game.isTie {
-                ClayLabel(text: "Unentschieden!", size: 34, fillColor: .white)
+                ClayLabel(text: "Unentschieden!", size: isIPad ? 40 : 34, fillColor: .white)
                 Text("Es gibt mehrere Sieger:innen.")
-                    .font(.system(.headline, design: .rounded).weight(.semibold))
+                    .font(.system(isIPad ? .title3 : .headline, design: .rounded).weight(.semibold))
                     .foregroundStyle(.white)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 6)
@@ -100,37 +146,35 @@ struct WinnerView: View {
             } else if let winner = game.winner {
                 SpeechBubble {
                     Text("Sieger:in")
-                        .font(.system(.subheadline, design: .rounded).weight(.heavy))
+                        .font(.system(isIPad ? .body : .subheadline, design: .rounded).weight(.heavy))
                         .foregroundStyle(.white)
                         .textCase(.uppercase)
                         .tracking(2)
                 }
 
-                ClayLabel(text: winner.name, size: 46, fillColor: .white, rotation: -2)
+                ClayLabel(text: winner.name, size: isIPad ? 56 : 46, fillColor: .white, rotation: -2)
                     .padding(.horizontal, 20)
                     .multilineTextAlignment(.center)
 
                 HStack(spacing: 6) {
                     Image(systemName: "star.fill").foregroundStyle(Theme.sunny)
                     Text("\(winner.total) Punkte")
-                        .font(.system(.title2, design: .rounded).weight(.heavy))
+                        .font(.system(isIPad ? .title : .title2, design: .rounded).weight(.heavy))
                         .foregroundStyle(Theme.charcoal)
                     Image(systemName: "star.fill").foregroundStyle(Theme.sunny)
                 }
                 .padding(.horizontal, 18)
                 .padding(.vertical, 8)
-                .background(
-                    Capsule().fill(.white)
-                        .shadow(color: .black.opacity(0.12), radius: 4, y: 2)
-                )
+                .background(Capsule().fill(.white).shadow(color: .black.opacity(0.12), radius: 4, y: 2))
             }
         }
+        .padding(.horizontal, isIPad ? 20 : 0)
     }
 
     private var standingsSection: some View {
         VStack(spacing: 10) {
             Text("Endstand")
-                .font(.system(.title2, design: .rounded).weight(.heavy))
+                .font(.system(isIPad ? .title2 : .title2, design: .rounded).weight(.heavy))
                 .foregroundStyle(.white)
                 .padding(.horizontal, 18)
                 .padding(.vertical, 6)
@@ -147,27 +191,26 @@ struct WinnerView: View {
                     }
                 }
             }
-            .padding(.horizontal, 20)
         }
     }
 
     private var tableHeader: some View {
         HStack(spacing: 8) {
             Text("#")
-                .frame(width: 28, alignment: .leading)
-            Text("Spieler:in")
+                .frame(width: 30, alignment: .leading)
+            Text("Name")
                 .frame(maxWidth: .infinity, alignment: .leading)
             ForEach(0..<GameViewModel.totalRounds, id: \.self) { round in
                 Text("R\(round + 1)")
-                    .frame(width: 28)
+                    .frame(width: 30)
             }
             Text("Σ")
-                .frame(width: 40, alignment: .trailing)
+                .frame(width: 44, alignment: .trailing)
         }
-        .font(.system(.caption, design: .rounded).weight(.heavy))
+        .font(.system(isIPad ? .subheadline : .caption, design: .rounded).weight(.heavy))
         .foregroundStyle(.white)
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
+        .padding(.horizontal, isIPad ? 18 : 14)
+        .padding(.vertical, isIPad ? 14 : 10)
         .background(Theme.grass)
     }
 
@@ -176,34 +219,43 @@ struct WinnerView: View {
             ZStack {
                 Circle()
                     .fill(rankColor(rank))
-                    .frame(width: 26, height: 26)
+                    .frame(width: isIPad ? 32 : 26, height: isIPad ? 32 : 26)
                     .overlay(Circle().stroke(.white, lineWidth: 1.5))
                 Text("\(rank)")
-                    .font(.system(.caption, design: .rounded).weight(.heavy))
+                    .font(.system(isIPad ? .footnote : .caption, design: .rounded).weight(.heavy))
                     .foregroundStyle(Theme.charcoal)
             }
-            .frame(width: 28, alignment: .leading)
+            .frame(width: 30, alignment: .leading)
 
             Text(player.name)
-                .font(.system(.subheadline, design: .rounded).weight(.bold))
+                .font(.system(isIPad ? .body : .subheadline, design: .rounded).weight(.bold))
                 .foregroundStyle(Theme.charcoal)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .lineLimit(1)
 
             ForEach(0..<GameViewModel.totalRounds, id: \.self) { round in
                 Text(player.roundScores[round].map(String.init) ?? "–")
-                    .font(.system(.caption, design: .rounded).monospacedDigit().weight(.semibold))
+                    .font(.system(isIPad ? .footnote : .caption, design: .rounded).monospacedDigit().weight(.semibold))
                     .foregroundStyle(Theme.charcoal.opacity(0.75))
-                    .frame(width: 28)
+                    .frame(width: 30)
             }
 
             Text("\(player.total)")
-                .font(.system(.subheadline, design: .rounded).weight(.black).monospacedDigit())
+                .font(.system(isIPad ? .body : .subheadline, design: .rounded).weight(.black).monospacedDigit())
                 .foregroundStyle(Theme.charcoal)
-                .frame(width: 40, alignment: .trailing)
+                .frame(width: 44, alignment: .trailing)
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 12)
+        .padding(.horizontal, isIPad ? 18 : 14)
+        .padding(.vertical, isIPad ? 16 : 12)
+    }
+
+    private var newGameButton: some View {
+        Button {
+            withAnimation { game.reset() }
+        } label: {
+            Label("Neues Spiel", systemImage: "arrow.counterclockwise")
+        }
+        .buttonStyle(ChunkyButtonStyle(fill: Theme.coral))
     }
 
     private func rankColor(_ rank: Int) -> Color {
@@ -219,10 +271,8 @@ struct WinnerView: View {
 #Preview {
     let game = GameViewModel()
     game.players = [
-        Player(name: "Anna"),
-        Player(name: "Ben"),
-        Player(name: "Clara"),
-        Player(name: "David")
+        Player(name: "Anna"), Player(name: "Ben"),
+        Player(name: "Clara"), Player(name: "David")
     ]
     for i in game.players.indices {
         for r in 0..<GameViewModel.totalRounds {
