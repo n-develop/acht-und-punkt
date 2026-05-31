@@ -16,10 +16,6 @@ struct WinnerView: View {
 
     var body: some View {
         ZStack {
-            ConfettiView()
-                .opacity(showStandings ? 1 : 0)
-                .animation(.easeIn(duration: 0.5), value: showStandings)
-
             if isIPad {
                 iPadLayout
             } else {
