@@ -86,11 +86,12 @@
 				};
 			};
 			buildConfigurationList = 4628F83A2FCCBE9A0029D75A /* Build configuration list for PBXProject "AchtUndPunkt" */;
-			developmentRegion = en;
+			developmentRegion = de;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
 				Base,
+				de,
 			);
 			mainGroup = 4628F8362FCCBE9A0029D75A;
 			minimizedProjectReferenceProxies = 1;
