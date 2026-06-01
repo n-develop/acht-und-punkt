@@ -1,2 +1,9 @@
 # App Store screenshots (generated locally, not for version control)
 Screenshots/
+
+# Xcode user-specific data (local IDE state, open tabs, breakpoints)
+xcuserdata/
+*.xcuserstate
+
+# Auto-generated empty workspace settings
+**/xcshareddata/WorkspaceSettings.xcsettings

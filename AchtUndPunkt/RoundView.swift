@@ -48,6 +48,11 @@ struct RoundView: View {
             for player in game.players where scoreInputs[player.id] == nil {
                 scoreInputs[player.id] = ""
             }
+            if let idx = game.screenshotAchtUndAusIndex, game.players.indices.contains(idx) {
+                let player = game.players[idx]
+                achtUndAusPlayer = player.id
+                scoreInputs[player.id] = "16"
+            }
         }
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {

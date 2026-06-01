@@ -46,7 +46,7 @@ struct WinnerView: View {
                     .padding(.horizontal, 32)
                     .padding(.bottom, 110)
             }
-            .frame(width: 320)
+            .frame(width: 380)
             .opacity(showStandings ? 1 : 0)
             .offset(y: showStandings ? 0 : 20)
 
@@ -54,12 +54,12 @@ struct WinnerView: View {
                 .background(Theme.charcoal.opacity(0.12))
                 .padding(.vertical, 40)
 
-            // Right column: standings table (takes remaining width)
-            ScrollView {
+            // Right column: standings table (takes remaining width, vertically centered)
+            VStack {
+                Spacer()
                 standingsSection
                     .padding(.horizontal, 24)
-                    .padding(.top, 40)
-                    .padding(.bottom, 120)
+                Spacer()
             }
             .frame(maxWidth: .infinity)
             .opacity(showStandings ? 1 : 0)
@@ -75,6 +75,7 @@ struct WinnerView: View {
             VStack(spacing: 24) {
                 trophySection(trophySize: 130, showRays: true)
                 standingsSection
+                    .padding(.horizontal, 16)
                     .opacity(showStandings ? 1 : 0)
                     .offset(y: showStandings ? 0 : 30)
 
@@ -190,23 +191,27 @@ struct WinnerView: View {
         }
     }
 
+    private var rankColWidth: CGFloat { isIPad ? 42 : 30 }
+    private var roundColWidth: CGFloat { isIPad ? 42 : 30 }
+    private var totalColWidth: CGFloat { isIPad ? 58 : 44 }
+
     private var tableHeader: some View {
         HStack(spacing: 8) {
             Text("#")
-                .frame(width: 30, alignment: .leading)
+                .frame(width: rankColWidth, alignment: .leading)
             Text("Name")
                 .frame(maxWidth: .infinity, alignment: .leading)
             ForEach(0..<GameViewModel.totalRounds, id: \.self) { round in
                 Text("R\(round + 1)")
-                    .frame(width: 30)
+                    .frame(width: roundColWidth)
             }
             Text("Σ")
-                .frame(width: 44, alignment: .trailing)
+                .frame(width: totalColWidth, alignment: .trailing)
         }
-        .font(.system(isIPad ? .subheadline : .caption, design: .rounded).weight(.heavy))
+        .font(.system(isIPad ? .body : .caption, design: .rounded).weight(.heavy))
         .foregroundStyle(.white)
-        .padding(.horizontal, isIPad ? 18 : 14)
-        .padding(.vertical, isIPad ? 14 : 10)
+        .padding(.horizontal, isIPad ? 22 : 14)
+        .padding(.vertical, isIPad ? 16 : 10)
         .background(Theme.grass)
     }
 
@@ -215,34 +220,34 @@ struct WinnerView: View {
             ZStack {
                 Circle()
                     .fill(rankColor(rank))
-                    .frame(width: isIPad ? 32 : 26, height: isIPad ? 32 : 26)
+                    .frame(width: isIPad ? 38 : 26, height: isIPad ? 38 : 26)
                     .overlay(Circle().stroke(.white, lineWidth: 1.5))
                 Text("\(rank)")
-                    .font(.system(isIPad ? .footnote : .caption, design: .rounded).weight(.heavy))
+                    .font(.system(isIPad ? .body : .caption, design: .rounded).weight(.heavy))
                     .foregroundStyle(Theme.charcoal)
             }
-            .frame(width: 30, alignment: .leading)
+            .frame(width: rankColWidth, alignment: .leading)
 
             Text(player.name)
-                .font(.system(isIPad ? .body : .subheadline, design: .rounded).weight(.bold))
+                .font(.system(isIPad ? .title3 : .subheadline, design: .rounded).weight(.bold))
                 .foregroundStyle(Theme.charcoal)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .lineLimit(1)
 
             ForEach(0..<GameViewModel.totalRounds, id: \.self) { round in
                 Text(player.roundScores[round].map(String.init) ?? "–")
-                    .font(.system(isIPad ? .footnote : .caption, design: .rounded).monospacedDigit().weight(.semibold))
+                    .font(.system(isIPad ? .body : .caption, design: .rounded).monospacedDigit().weight(.semibold))
                     .foregroundStyle(Theme.charcoal.opacity(0.75))
-                    .frame(width: 30)
+                    .frame(width: roundColWidth)
             }
 
             Text("\(player.total)")
-                .font(.system(isIPad ? .body : .subheadline, design: .rounded).weight(.black).monospacedDigit())
+                .font(.system(isIPad ? .title3 : .subheadline, design: .rounded).weight(.black).monospacedDigit())
                 .foregroundStyle(Theme.charcoal)
-                .frame(width: 44, alignment: .trailing)
+                .frame(width: totalColWidth, alignment: .trailing)
         }
-        .padding(.horizontal, isIPad ? 18 : 14)
-        .padding(.vertical, isIPad ? 16 : 12)
+        .padding(.horizontal, isIPad ? 22 : 14)
+        .padding(.vertical, isIPad ? 20 : 12)
     }
 
     private var newGameButton: some View {
