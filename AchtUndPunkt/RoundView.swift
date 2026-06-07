@@ -30,20 +30,21 @@ struct RoundView: View {
     }
 
     var body: some View {
-        VStack(spacing: isIPad ? 20 : 16) {
-            header
+        ScrollView {
+            VStack(spacing: isIPad ? 20 : 16) {
+                header
 
-            ScrollView {
                 playerList
                     .padding(.horizontal, isIPad ? 32 : 20)
                     .padding(.bottom, 8)
-            }
 
-            actionButton
-                .padding(.horizontal, isIPad ? 32 : 20)
-                .frame(maxWidth: isIPad ? 500 : .infinity)
-                .padding(.bottom, 90)
+                actionButton
+                    .padding(.horizontal, isIPad ? 32 : 20)
+                    .frame(maxWidth: isIPad ? 500 : .infinity)
+                    .padding(.bottom, 90)
+            }
         }
+        .scrollDismissesKeyboard(.interactively)
         .onAppear {
             for player in game.players where scoreInputs[player.id] == nil {
                 scoreInputs[player.id] = ""
@@ -174,8 +175,7 @@ struct RoundView: View {
                         get: { scoreInputs[player.id] ?? "" },
                         set: { newValue in
                             if achtUndAusPlayer == player.id { achtUndAusPlayer = nil }
-                            let filtered = newValue.filter { $0.isNumber || $0 == "-" }
-                            scoreInputs[player.id] = filtered
+                            scoreInputs[player.id] = newValue.filter { $0.isNumber }
                         }
                     ),
                     focused: $focusedPlayer,
@@ -248,7 +248,6 @@ private struct ScoreInputField: View {
 
     private var chipColor: Color {
         guard let v = displayValue else { return Theme.cream }
-        if v < 0 { return Theme.claret }
         if v > 0 { return Theme.grass }
         return Theme.charcoal.opacity(0.5)
     }
@@ -259,7 +258,7 @@ private struct ScoreInputField: View {
             text: $text,
             prompt: Text("0").foregroundColor(.white.opacity(0.6))
         )
-        .keyboardType(.numbersAndPunctuation)
+        .keyboardType(.numberPad)
         .multilineTextAlignment(.center)
         .font(.system(.title2, design: .rounded).weight(.black))
         .foregroundStyle(displayValue == nil ? Theme.charcoal.opacity(0.45) : .white)

@@ -16,18 +16,19 @@ struct PlayerSetupView: View {
     private var isIPad: Bool { horizontalSizeClass == .regular }
 
     var body: some View {
-        VStack(spacing: isIPad ? 28 : 18) {
-            header
+        ScrollView {
+            VStack(spacing: isIPad ? 28 : 18) {
+                header
 
-            ScrollView {
                 playerGrid
                     .padding(.horizontal, isIPad ? 40 : 20)
-            }
 
-            startButton
-                .padding(.horizontal, isIPad ? 40 : 20)
-                .padding(.bottom, 90)
+                startButton
+                    .padding(.horizontal, isIPad ? 40 : 20)
+                    .padding(.bottom, 90)
+            }
         }
+        .scrollDismissesKeyboard(.interactively)
         .frame(maxWidth: isIPad ? 700 : .infinity)
         #if DEBUG
         .overlay(alignment: .topTrailing) {
@@ -132,8 +133,13 @@ struct PlayerSetupView: View {
                 TextField(
                     "",
                     text: Binding(
-                        get: { game.players[index].name },
-                        set: { game.players[index].name = $0 }
+                        get: {
+                            game.players.first(where: { $0.id == playerID })?.name ?? ""
+                        },
+                        set: { newValue in
+                            guard let i = game.players.firstIndex(where: { $0.id == playerID }) else { return }
+                            game.players[i].name = newValue
+                        }
                     ),
                     prompt: Text("Spieler \(index + 1)").foregroundColor(Theme.charcoal.opacity(0.4))
                 )
@@ -147,7 +153,7 @@ struct PlayerSetupView: View {
                 if game.canRemovePlayer {
                     Button {
                         withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-                            game.removePlayer(at: index)
+                            game.removePlayer(id: playerID)
                         }
                     } label: {
                         Image(systemName: "minus.circle.fill")

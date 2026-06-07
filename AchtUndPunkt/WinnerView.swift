@@ -42,7 +42,7 @@ struct WinnerView: View {
                 Spacer()
                 trophySection(trophySize: 140, showRays: true)
                 Spacer()
-                newGameButton
+                actionButtons
                     .padding(.horizontal, 32)
                     .padding(.bottom, 110)
             }
@@ -79,7 +79,7 @@ struct WinnerView: View {
                     .opacity(showStandings ? 1 : 0)
                     .offset(y: showStandings ? 0 : 30)
 
-                newGameButton
+                actionButtons
                     .padding(.horizontal, 20)
                     .padding(.top, 4)
                     .opacity(showStandings ? 1 : 0)
@@ -250,13 +250,22 @@ struct WinnerView: View {
         .padding(.vertical, isIPad ? 20 : 12)
     }
 
-    private var newGameButton: some View {
-        Button {
-            withAnimation { game.reset() }
-        } label: {
-            Label("Neues Spiel", systemImage: "arrow.counterclockwise")
+    private var actionButtons: some View {
+        VStack(spacing: 12) {
+            Button {
+                withAnimation { game.restartWithSamePlayers() }
+            } label: {
+                Label("Nochmal mit gleichen Spielern", systemImage: "arrow.clockwise")
+            }
+            .buttonStyle(ChunkyButtonStyle(fill: Theme.grass))
+
+            Button {
+                withAnimation { game.reset() }
+            } label: {
+                Label("Neues Spiel", systemImage: "person.2.fill")
+            }
+            .buttonStyle(ChunkyButtonStyle(fill: Theme.coral))
         }
-        .buttonStyle(ChunkyButtonStyle(fill: Theme.coral))
     }
 
     private func rankColor(_ rank: Int) -> Color {

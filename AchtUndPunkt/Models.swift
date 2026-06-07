@@ -87,8 +87,8 @@ final class GameViewModel: ObservableObject {
         players.append(Player(name: ""))
     }
 
-    func removePlayer(at index: Int) {
-        guard canRemovePlayer, players.indices.contains(index) else { return }
+    func removePlayer(id: UUID) {
+        guard canRemovePlayer, let index = players.firstIndex(where: { $0.id == id }) else { return }
         players.remove(at: index)
     }
 
@@ -121,6 +121,13 @@ final class GameViewModel: ObservableObject {
     func reset() {
         players = [Player(name: ""), Player(name: "")]
         phase = .setup
+    }
+
+    func restartWithSamePlayers() {
+        for index in players.indices {
+            players[index].roundScores = Array(repeating: nil, count: Self.totalRounds)
+        }
+        phase = .playing(round: 0)
     }
 
     var sortedByTotal: [Player] {
