@@ -28,23 +28,87 @@ enum Theme {
     ]
 }
 
+private struct CloudPlacement {
+    let xFrac: CGFloat
+    let yFrac: CGFloat
+    let width: CGFloat
+    let opacity: Double
+    let drift: CGFloat
+    let duration: Double
+}
+
+private let cloudPlacements: [CloudPlacement] = [
+    CloudPlacement(xFrac: 0.05, yFrac: 0.04, width: 130, opacity: 1.0,  drift:  30, duration: 5),
+    CloudPlacement(xFrac: 0.55, yFrac: 0.08, width: 105, opacity: 0.95, drift:  28, duration: 9),
+    CloudPlacement(xFrac: 0.20, yFrac: 0.28, width: 100, opacity: 0.85, drift: -25, duration: 8),
+    CloudPlacement(xFrac: 0.62, yFrac: 0.32, width: 90,  opacity: 0.8,  drift: -35, duration: 7),
+    CloudPlacement(xFrac: 0.38, yFrac: 0.48, width: 115, opacity: 0.9,  drift:  20, duration: 12),
+]
+
+private struct DriftingCloud: View {
+    let placement: CloudPlacement
+    let baseX: CGFloat
+    let baseY: CGFloat
+    @State private var drifted = false
+
+    var body: some View {
+        CloudView(width: placement.width, opacity: placement.opacity)
+            .position(
+                x: baseX + (drifted ? placement.drift : 0),
+                y: baseY
+            )
+            .onAppear {
+                withAnimation(
+                    .linear(duration: placement.duration)
+                    .repeatForever(autoreverses: true)
+                ) {
+                    drifted = true
+                }
+            }
+    }
+}
+
 struct SkyBackground: View {
     var body: some View {
-        LinearGradient(
-            colors: [Theme.skyLight, Theme.sky],
-            startPoint: .top,
-            endPoint: .bottom
-        )
-        .overlay(alignment: .bottom) {
-            GroundShape()
-                .fill(Theme.grass)
-                .frame(height: 110)
-                .overlay(alignment: .top) {
-                    GroundShape()
-                        .stroke(Theme.grassDark, lineWidth: 4)
-                        .frame(height: 110)
+        GeometryReader { geo in
+            ZStack {
+                LinearGradient(
+                    colors: [Theme.skyLight, Theme.sky],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+
+                // Sun in upper-right corner
+                Circle()
+                    .fill(Theme.sunny)
+                    .frame(width: 80, height: 80)
+                    .shadow(color: .black.opacity(0.15), radius: 8)
+                    .position(x: geo.size.width - 64, y: 64)
+
+                // Clouds scattered across the upper sky
+                ForEach(cloudPlacements.indices, id: \.self) { i in
+                    let c = cloudPlacements[i]
+                    DriftingCloud(
+                        placement: c,
+                        baseX: geo.size.width * c.xFrac + c.width / 2,
+                        baseY: geo.size.height * c.yFrac + c.width * 0.25
+                    )
                 }
-                .ignoresSafeArea(edges: .bottom)
+
+                // Ground
+                VStack {
+                    Spacer()
+                    GroundShape()
+                        .fill(Theme.grass)
+                        .frame(height: 110)
+                        .overlay(alignment: .top) {
+                            GroundShape()
+                                .stroke(Theme.grassDark, lineWidth: 4)
+                                .frame(height: 110)
+                        }
+                        .ignoresSafeArea(edges: .bottom)
+                }
+            }
         }
         .ignoresSafeArea()
     }
@@ -73,6 +137,30 @@ struct GroundShape: Shape {
         p.addLine(to: CGPoint(x: rect.width, y: rect.height))
         p.closeSubpath()
         return p
+    }
+}
+
+struct CloudView: View {
+    var width: CGFloat = 120
+    var opacity: Double = 1.0
+
+    var body: some View {
+        let h = width * 0.5
+        ZStack(alignment: .bottomLeading) {
+            Circle()
+                .frame(width: h * 0.9, height: h * 0.9)
+                .offset(x: width * 0.12, y: 0)
+            Circle()
+                .frame(width: h * 1.1, height: h * 1.1)
+                .offset(x: width * 0.32, y: h * 0.1)
+            Circle()
+                .frame(width: h * 0.8, height: h * 0.8)
+                .offset(x: width * 0.6, y: h * 0.2)
+            RoundedRectangle(cornerRadius: h * 0.3)
+                .frame(width: width, height: h * 0.55)
+        }
+        .foregroundStyle(.white.opacity(opacity))
+        .shadow(color: .black.opacity(0.10), radius: 5, y: 3)
     }
 }
 
