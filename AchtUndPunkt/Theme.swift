@@ -50,6 +50,7 @@ private struct DriftingCloud: View {
     let baseX: CGFloat
     let baseY: CGFloat
     @State private var drifted = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         CloudView(width: placement.width, opacity: placement.opacity)
@@ -58,6 +59,7 @@ private struct DriftingCloud: View {
                 y: baseY
             )
             .onAppear {
+                guard !reduceMotion else { return }
                 withAnimation(
                     .linear(duration: placement.duration)
                     .repeatForever(autoreverses: true)
@@ -111,6 +113,7 @@ struct SkyBackground: View {
             }
         }
         .ignoresSafeArea()
+        .accessibilityHidden(true)
     }
 }
 
@@ -186,6 +189,9 @@ struct ClayLabel: View {
         }
         .rotationEffect(.degrees(rotation))
         .shadow(color: .black.opacity(0.18), radius: 6, y: 4)
+        // The shadow copy would make VoiceOver read the text twice
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(text)
     }
 }
 

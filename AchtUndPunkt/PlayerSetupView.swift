@@ -39,6 +39,7 @@ struct PlayerSetupView: View {
                     .padding(.top, isIPad ? 44 : 16)
                     .padding(.trailing, 16)
             }
+            .accessibilityLabel("App-Icon exportieren")
         }
         .sheet(isPresented: $showIconExport) { IconExportSheet() }
         #endif
@@ -54,6 +55,9 @@ struct PlayerSetupView: View {
                 }
             }
             .padding(.top, isIPad ? 40 : 28)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("8 und Punkt!")
+            .accessibilityAddTraits(.isHeader)
 
             SpeechBubble {
                 Text("Wer spielt mit?")
@@ -129,6 +133,7 @@ struct PlayerSetupView: View {
                         .font(.headline.bold())
                         .foregroundStyle(.white)
                 }
+                .accessibilityHidden(true)
 
                 TextField(
                     "",
@@ -149,6 +154,7 @@ struct PlayerSetupView: View {
                 .autocorrectionDisabled()
                 .submitLabel(.next)
                 .focused($focusedField, equals: playerID)
+                .accessibilityLabel("Name von Spieler \(index + 1)")
 
                 if game.canRemovePlayer {
                     Button {
@@ -160,6 +166,7 @@ struct PlayerSetupView: View {
                             .font(.title2)
                             .foregroundStyle(Theme.claret.opacity(0.85))
                     }
+                    .accessibilityLabel("Spieler \(index + 1) entfernen")
                 }
             }
             .padding(.horizontal, 16)

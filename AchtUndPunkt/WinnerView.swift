@@ -11,6 +11,7 @@ struct WinnerView: View {
     @State private var trophyRotation: Double = -25
     @State private var showStandings = false
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var isIPad: Bool { horizontalSizeClass == .regular }
 
@@ -23,6 +24,12 @@ struct WinnerView: View {
             }
         }
         .onAppear {
+            if reduceMotion {
+                trophyScale = 1.0
+                trophyRotation = 0
+                showStandings = true
+                return
+            }
             withAnimation(.interpolatingSpring(stiffness: 80, damping: 8).delay(0.1)) {
                 trophyScale = 1.0
                 trophyRotation = 0
@@ -131,6 +138,7 @@ struct WinnerView: View {
                     .scaleEffect(trophyScale)
                     .rotationEffect(.degrees(trophyRotation))
             }
+            .accessibilityHidden(true)
 
             if game.isTie {
                 ClayLabel(text: "Unentschieden!", size: isIPad ? 40 : 34, fillColor: .white)
@@ -163,6 +171,8 @@ struct WinnerView: View {
                 .padding(.horizontal, 18)
                 .padding(.vertical, 8)
                 .background(Capsule().fill(.white).shadow(color: .black.opacity(0.12), radius: 4, y: 2))
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("\(winner.total) Punkte")
             }
         }
         .padding(.horizontal, isIPad ? 20 : 0)
@@ -176,6 +186,7 @@ struct WinnerView: View {
                 .padding(.horizontal, 18)
                 .padding(.vertical, 6)
                 .background(Capsule().fill(Theme.charcoal.opacity(0.3)))
+                .accessibilityAddTraits(.isHeader)
 
             ClayCard {
                 VStack(spacing: 0) {
@@ -213,6 +224,8 @@ struct WinnerView: View {
         .padding(.horizontal, isIPad ? 22 : 14)
         .padding(.vertical, isIPad ? 16 : 10)
         .background(Theme.grass)
+        // Each standings row reads its full context; "R1"/"Σ" would only confuse
+        .accessibilityHidden(true)
     }
 
     private func standingsRow(rank: Int, player: Player) -> some View {
@@ -248,6 +261,15 @@ struct WinnerView: View {
         }
         .padding(.horizontal, isIPad ? 22 : 14)
         .padding(.vertical, isIPad ? 20 : 12)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(standingsAccessibilityLabel(rank: rank, player: player))
+    }
+
+    private func standingsAccessibilityLabel(rank: Int, player: Player) -> String {
+        let rounds = (0..<GameViewModel.totalRounds).map { round in
+            "Runde \(round + 1): \(player.roundScores[round].map(String.init) ?? "keine Wertung")"
+        }
+        return "Platz \(rank): \(player.name), \(rounds.joined(separator: ", ")), Gesamt \(player.total) Punkte"
     }
 
     private var actionButtons: some View {

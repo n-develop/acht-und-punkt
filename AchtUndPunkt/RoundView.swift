@@ -61,6 +61,8 @@ struct RoundView: View {
                     .ignoresSafeArea()
                     .onTapGesture { selectPlayer(nil) }
                     .transition(.opacity)
+                    // The keypad is modal and has its own close button
+                    .accessibilityHidden(true)
 
                 keypad(for: id)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -74,6 +76,8 @@ struct RoundView: View {
                 let player = game.players[idx]
                 achtUndAusPlayer = player.id
                 scoreInputs[player.id] = "16"
+                // Showcase the custom keypad in App Store screenshots
+                selectedPlayer = player.id
             }
         }
     }
@@ -105,6 +109,7 @@ struct RoundView: View {
                     .font(.system(isIPad ? .title : .title2, design: .rounded).weight(.heavy))
                     .foregroundStyle(.white)
             }
+            .accessibilityAddTraits(.isHeader)
 
             HStack(spacing: isIPad ? 12 : 8) {
                 ForEach(0..<GameViewModel.totalRounds, id: \.self) { i in
@@ -114,6 +119,8 @@ struct RoundView: View {
                         .overlay(Circle().stroke(Theme.charcoal.opacity(0.25), lineWidth: 1))
                 }
             }
+            // The speech bubble above already announces "Runde x von y"
+            .accessibilityHidden(true)
 
             Text("Punkte für diese Runde eintragen")
                 .font(.system(isIPad ? .body : .subheadline, design: .rounded).weight(.semibold))
@@ -191,7 +198,19 @@ struct RoundView: View {
             }
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("\(player.name), Gesamt \(player.total) Punkte")
+        .accessibilityValue(accessibilityScoreValue(for: player.id, isWinner: isWinner))
+        .accessibilityHint("Öffnet das Tastenfeld zur Punkteeingabe")
         .id(player.id)
+    }
+
+    private func accessibilityScoreValue(for id: UUID, isWinner: Bool) -> String {
+        guard let text = scoreInputs[id],
+              let value = Int(text.trimmingCharacters(in: .whitespaces)) else {
+            return "Noch keine Punkte eingetragen"
+        }
+        let base = "\(value) Punkte diese Runde"
+        return isWinner ? "\(base), Acht und aus" : base
     }
 
     // MARK: - Keypad actions

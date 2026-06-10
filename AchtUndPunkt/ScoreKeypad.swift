@@ -55,6 +55,8 @@ struct ScoreKeypad: View {
                 .shadow(color: .black.opacity(0.22), radius: 14, y: -2)
         )
         .padding(.horizontal, 10)
+        // Keep VoiceOver focus on the keypad instead of the dimmed list behind it
+        .accessibilityAddTraits(.isModal)
     }
 
     private var header: some View {
@@ -69,6 +71,7 @@ struct ScoreKeypad: View {
                     .font(.subheadline.bold())
                     .foregroundStyle(.white)
             }
+            .accessibilityHidden(true)
 
             Text(playerName)
                 .font(.system(.headline, design: .rounded).weight(.heavy))
@@ -82,6 +85,8 @@ struct ScoreKeypad: View {
                 .foregroundStyle(isAchtUndAus ? Theme.coral : Theme.charcoal)
                 .contentTransition(.numericText())
                 .animation(.spring(response: 0.25, dampingFraction: 0.7), value: currentValue)
+                .accessibilityLabel("Eingegebene Punkte")
+                .accessibilityValue(currentValue.isEmpty ? "Keine" : currentValue)
 
             Button(action: onDismiss) {
                 Image(systemName: "chevron.down.circle.fill")
@@ -163,6 +168,7 @@ struct ScoreKeypad: View {
             height: 60,
             cornerRadius: 20
         ))
+        .accessibilityLabel("Acht und aus! Trägt 16 Punkte ein")
     }
 }
 
